@@ -2,14 +2,16 @@ import { Canvas } from "@react-three/fiber";
 import { useGLTF, OrbitControls } from "@react-three/drei";
 import { Suspense, useLayoutEffect, useState } from "react";
 
-const RAW_SRC = "/model.glb";
+const BASE = import.meta.env.BASE_URL;
+
+const RAW_SRC = `${BASE}model.glb`;
 
 const LODS = [
-  { src: "/model-lod0.glb", label: "2%", size: "0.32 MB", color: "#ef4444" },
-  { src: "/model-lod1.glb", label: "10%", size: "0.57 MB", color: "#f97316" },
-  { src: "/model-lod2.glb", label: "25%", size: "1.82 MB", color: "#eab308" },
-  { src: "/model-lod3.glb", label: "50%", size: "5.25 MB", color: "#22c55e" },
-  { src: "/model-lod4.glb", label: "100%", size: "28.3 MB", color: "#3b82f6" },
+  { src: `${BASE}model-lod0.glb`, label: "2%",   size: "0.32 MB", color: "#ef4444" },
+  { src: `${BASE}model-lod1.glb`, label: "10%",  size: "0.57 MB", color: "#f97316" },
+  { src: `${BASE}model-lod2.glb`, label: "25%",  size: "1.82 MB", color: "#eab308" },
+  { src: `${BASE}model-lod3.glb`, label: "50%",  size: "5.25 MB", color: "#22c55e" },
+  { src: `${BASE}model-lod4.glb`, label: "100%", size: "28.3 MB", color: "#3b82f6" },
 ];
 
 useGLTF.preload(RAW_SRC);
