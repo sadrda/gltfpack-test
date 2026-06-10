@@ -185,27 +185,6 @@ export default function App() {
           />
         ))}
 
-        {rawTime !== null && bestLod === LODS.length - 1 && (
-          <div
-            style={{
-              marginTop: 4,
-              background: "rgba(255,255,255,0.85)",
-              color: "#000",
-              padding: "6px 12px",
-              borderRadius: 6,
-              borderLeft: "3px solid #818cf8",
-              display: "flex",
-              gap: 10,
-            }}
-          >
-            <span style={{ opacity: 0.4 }}>raw vs full LOD</span>
-            <span style={{ marginLeft: "auto" }}>
-              {rawTime > lodTimes[LODS.length - 1]!
-                ? `packed ${(rawTime - lodTimes[LODS.length - 1]!).toFixed(0)} ms faster`
-                : `raw ${(lodTimes[LODS.length - 1]! - rawTime).toFixed(0)} ms faster`}
-            </span>
-          </div>
-        )}
       </div>
     </>
   );
