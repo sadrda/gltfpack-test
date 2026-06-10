@@ -2,14 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { useGLTF, OrbitControls } from "@react-three/drei";
 import { Suspense, useLayoutEffect, useState } from "react";
 
-useGLTF.preload("/model.glb");
-[
-  "/model-lod0.glb",
-  "/model-lod1.glb",
-  "/model-lod2.glb",
-  "/model-lod3.glb",
-  "/model-lod4.glb",
-].forEach((src) => useGLTF.preload(src));
+const RAW_SRC = "/model.glb";
 
 const LODS = [
   { src: "/model-lod0.glb", label: "2%", size: "0.32 MB", color: "#ef4444" },
@@ -19,22 +12,21 @@ const LODS = [
   { src: "/model-lod4.glb", label: "100%", size: "28.3 MB", color: "#3b82f6" },
 ];
 
-const glReadyAt = { current: 0 };
+useGLTF.preload(RAW_SRC);
+LODS.forEach((lod) => useGLTF.preload(lod.src));
 
-function timeFromPageLoad(): number {
-  return performance.now();
-}
-
-function RawModel({
+function Model({
+  src,
   position,
   onLoaded,
 }: {
-  position: [number, number, number];
+  src: string;
+  position?: [number, number, number];
   onLoaded: (ms: number) => void;
 }) {
-  const { scene } = useGLTF("/model.glb");
+  const { scene } = useGLTF(src);
   useLayoutEffect(() => {
-    onLoaded(timeFromPageLoad());
+    onLoaded(performance.now());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <primitive
@@ -46,40 +38,25 @@ function RawModel({
   );
 }
 
-function LodModel({
-  src,
-  onLoaded,
-}: {
-  src: string;
-  onLoaded: (ms: number) => void;
-}) {
-  const { scene } = useGLTF(src);
-  useLayoutEffect(() => {
-    onLoaded(timeFromPageLoad());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  return <primitive object={scene} scale={2} rotation={[0, Math.PI, 0]} />;
-}
-
-// Manages its own visibility state so updates stay local and synchronous
 function ProgressiveLODs({
   position,
-  onLodLoaded,
+  onLoaded,
 }: {
   position: [number, number, number];
-  onLodLoaded: (index: number, ms: number) => void;
+  onLoaded: (index: number, ms: number) => void;
 }) {
-  const [currentBest, setCurrentBest] = useState(-1);
+  const [best, setBest] = useState(-1);
 
   return (
     <group position={position}>
       {LODS.map((lod, i) => (
         <Suspense key={lod.src} fallback={null}>
-          <group visible={i === currentBest}>
-            <LodModel
+          <group visible={i === best}>
+            <Model
               src={lod.src}
               onLoaded={(ms) => {
-                setCurrentBest((prev) => Math.max(prev, i));
-                onLodLoaded(i, ms);
+                setBest((prev) => Math.max(prev, i));
+                onLoaded(i, ms);
               }}
             />
           </group>
@@ -147,24 +124,12 @@ export default function App() {
   const [lodTimes, setLodTimes] = useState<(number | null)[]>(
     Array(LODS.length).fill(null),
   );
-  const [currentBest, setCurrentBest] = useState(-1);
-
-  const handleLodLoaded = (index: number, ms: number) => {
-    setLodTimes((prev) => {
-      const n = [...prev];
-      n[index] = ms;
-      return n;
-    });
-    setCurrentBest((prev) => Math.max(prev, index));
-  };
+  const [bestLod, setBestLod] = useState(-1);
 
   return (
     <>
       <Canvas
-        onCreated={() => {
-          glReadyAt.current = performance.now();
-          setGlReadyMs(glReadyAt.current);
-        }}
+        onCreated={() => setGlReadyMs(performance.now())}
         camera={{ position: [0, 2, 9], fov: 50 }}
         style={{ width: "100vw", height: "100vh" }}
       >
@@ -172,9 +137,19 @@ export default function App() {
         <directionalLight position={[5, 10, 5]} intensity={3} />
         <directionalLight position={[-5, 5, -5]} intensity={1} />
         <Suspense fallback={null}>
-          <RawModel position={[2, 0, 0]} onLoaded={setRawTime} />
+          <Model src={RAW_SRC} position={[2, 0, 0]} onLoaded={setRawTime} />
         </Suspense>
-        <ProgressiveLODs position={[-2, 0, 0]} onLodLoaded={handleLodLoaded} />
+        <ProgressiveLODs
+          position={[-2, 0, 0]}
+          onLoaded={(i, ms) => {
+            setLodTimes((prev) => {
+              const n = [...prev];
+              n[i] = ms;
+              return n;
+            });
+            setBestLod((prev) => Math.max(prev, i));
+          }}
+        />
         <OrbitControls />
       </Canvas>
 
@@ -206,11 +181,11 @@ export default function App() {
             sub={lod.size}
             color={lod.color}
             time={lodTimes[i]}
-            active={i === currentBest}
+            active={i === bestLod}
           />
         ))}
 
-        {rawTime !== null && currentBest === LODS.length - 1 && (
+        {rawTime !== null && bestLod === LODS.length - 1 && (
           <div
             style={{
               marginTop: 4,
