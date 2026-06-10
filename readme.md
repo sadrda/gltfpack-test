@@ -1,1 +1,3 @@
-model by MONYA: https://sketchfab.com/3d-models/malice-gameoverse-read-description-b227b0d2660e46048ecbfe882cb8f198
+- throttle in network tab for better results (10MB up/down)
+- uses webp texture compression over ktx2 for demo purposes. might add ktx2 next.
+- model by MONYA: https://sketchfab.com/3d-models/malice-gameoverse-read-description-b227b0d2660e46048ecbfe882cb8f198
